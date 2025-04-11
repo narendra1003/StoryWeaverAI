@@ -8,8 +8,8 @@ if not GOOGLE_API_KEY:
     st.error("Please set the GOOGLE_API_KEY in Streamlit's secrets.")
     st.stop()
 
-# Import API key stored in secret
-GOOGLE_API_KEY = st.secrets["GOOGLE_API_KEY"]
+# Initialize genai client
+client = genai.Client(api_key=GOOGLE_API_KEY)
 
 # Title of the application
 st.title('StoryWeaverAI')
