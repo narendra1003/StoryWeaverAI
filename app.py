@@ -1,7 +1,6 @@
 # Import the modules and libraries
 import streamlit as st
 import os
-import chromadb
 from google import genai
 from google.genai import types
 
@@ -10,6 +9,8 @@ from google.genai import types
 __import__('pysqlite3')
 import sys
 sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
+
+import chromadb
 
 # Import API key stored in secret
 GOOGLE_API_KEY = st.secrets["GOOGLE_API_KEY"]
