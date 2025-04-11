@@ -15,14 +15,14 @@ import chromadb
 # Import API key stored in secret
 GOOGLE_API_KEY = st.secrets["GOOGLE_API_KEY"]
 
-# Set up ChromaDB in-memory
-client_rag = chromadb.Client(settings=chromadb.config.Settings(chroma_db_impl="memory+collection"))
+# Set up ChromaDB in-memory (Corrected client initialization)
+client_rag = chromadb.Client(client_type="memory")
 
 # Check if the collection exists before creating it
-if "story_knowledge" not in [collection.name for collection in client_rag.list_collections()]:
-    collection = client_rag.create_collection("story_knowledge")
+if "story_knowledge" not in client_rag.list_collections():  # Simplified check
+    collection = client_rag.create_collection(name="story_knowledge")
 else:
-    collection = client_rag.get_or_create_collection("story_knowledge")
+    collection = client_rag.get_or_create_collection(name="story_knowledge")
 
 # Title of the application
 st.title('StoryWeaverAI')
