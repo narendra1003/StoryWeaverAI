@@ -5,6 +5,11 @@ import chromadb
 from google import genai
 from google.genai import types
 
+# Force use of pysqlite3-binary work around, specific for streamlit purpose.
+# Streamlit is using older version of pysqllite3
+__import__('pysqlite3')
+import sys
+sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
 
 # Import API key stored in secret
 GOOGLE_API_KEY = st.secrets["GOOGLE_API_KEY"]
