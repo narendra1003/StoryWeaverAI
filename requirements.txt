@@ -1,4 +1,5 @@
 streamlit
 google-genai
-chromadb
+pypika
 pysqlite3
+chromadb
