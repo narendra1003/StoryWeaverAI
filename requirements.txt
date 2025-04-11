@@ -1,4 +1,2 @@
 streamlit
 google-genai
-pysqlite3-binary
-chromadb
