@@ -1,4 +1,3 @@
 streamlit
 google-genai
-pysqlite3
-chromadb
+chromadb==0.4.14
