@@ -194,10 +194,14 @@ embeddings = client.models.embed_content(model="models/text-embedding-004", cont
 # Access the 'embeddings' attribute
 embedded_list = [embedding.values for embedding in embeddings.embeddings]
 
-
 # Set up ChromaDB in-memory
 client_rag = chromadb.Client()
-collection = client_rag.create_collection("story_knowledge")
+
+# Check if the collection exists before creating it
+if "story_knowledge" not in [collection.name for collection in client_rag.list_collections()]:
+    collection = client_rag.create_collection("story_knowledge")
+else:
+    collection = client_rag.get_or_create_collection("story_knowledge")
 
 # Add embeddings and documents to the collection
 ids = [f"doc_{i}" for i in range(len(knowledge_base))]
