@@ -3,7 +3,7 @@ from google import genai
 from google.genai import types
 
 # --- API Key Setup ---
-GOOGLE_API_KEY = st.secrets.get("GOOGLE_API_KEY") # Access the API key from Streamlit secrets
+GOOGLE_API_KEY = st.secrets.get("GOOGLE_API_KEY")  # Access the API key from Streamlit secrets
 if not GOOGLE_API_KEY:
     st.error("Please set the GOOGLE_API_KEY in Streamlit's secrets.")
     st.stop()
@@ -63,9 +63,9 @@ if not st.session_state["user_name"]:
     if st.button("Submit Name"):
         st.session_state["user_name"] = user_name_input.strip()
         introduction_prompt = f"Introduce yourself to {st.session_state['user_name']} as they will be using your capabilities to create an interactive story. Use their name in the explanation."
-        response = chat.send_message(introduction_prompt)
+        response = client.chat.send_message(introduction_prompt) #changed from chat.send_message to client.chat.send_message
         st.markdown(response.text)  # Display the introduction
-        st.session_state["first_turn"] = True # Reset first turn
+        st.session_state["first_turn"] = True  # Reset first turn
 
 # --- Main Interaction ---
 else:
@@ -84,7 +84,8 @@ else:
             st.write("\n".join(st.session_state['generated_story_parts']).strip())
             st.stop()  # Stop further execution
         elif continue_story == "yes":
-            interaction_type = st.radio("Enter an 'emotion' or a 'situation' to guide the next part of the story:", ("emotion", "situation"))
+            interaction_type = st.radio("Enter an 'emotion' or a 'situation' to guide the next part of the story:",
+                                        ("emotion", "situation"))
             if interaction_type:
                 st.session_state["interaction_type"] = interaction_type
 
@@ -95,25 +96,28 @@ else:
                 user_input = f"User guides with emotion: {core_emotion}"
                 st.write(user_input)
                 st.session_state["story_history"] += f"{user_input}\n"
-                interactive_prompt = create_interactive_prompt(user_input, few_shot_examples, st.session_state["story_history"])
-                response = chat.send_message(interactive_prompt)
+                interactive_prompt = create_interactive_prompt(user_input, few_shot_examples,
+                                                             st.session_state["story_history"])
+                response = client.chat.send_message(interactive_prompt) #changed from chat.send_message to client.chat.send_message
                 generated_text = response.text.replace("Story:", "").strip()
                 st.write("\nGenerated Story:")
                 st.write(generated_text)
                 st.session_state["story_history"] += f"AI continues: {generated_text}\n"
                 st.session_state["generated_story_parts"].append(generated_text)
-                st.session_state["interaction_type"] = None # Clear interaction type
+                st.session_state["interaction_type"] = None  # Clear interaction type
         elif st.session_state["interaction_type"] == "situation":
             brief_situation = st.text_input("Enter a brief situation (e.g., empty swing set, whisper in the dark):")
             if brief_situation:
                 user_input = f"User guides with situation: {brief_situation}"
                 st.write(user_input)
                 st.session_state["story_history"] += f"{user_input}\n"
-                interactive_prompt = create_interactive_prompt(user_input, few_shot_examples, st.session_state["story_history"])
-                response = chat.send_message(interactive_prompt)
+                interactive_prompt = create_interactive_prompt(user_input, few_shot_examples,
+                                                             st.session_state["story_history"])
+                response = client.chat.send_message(interactive_prompt) #changed from chat.send_message to client.chat.send_message
                 generated_text = response.text.replace("Story:", "").strip()
                 st.write("\nGenerated Story:")
                 st.write(generated_text)
                 st.session_state["story_history"] += f"AI continues: {generated_text}\n"
                 st.session_state["generated_story_parts"].append(generated_text)
-                st.session_state["interaction_type"] = None # Clear interaction type
+                st.session_state["interaction_type"] = None  # Clear interaction type
+                
