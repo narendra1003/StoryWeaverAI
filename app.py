@@ -20,6 +20,9 @@ st.title('StoryWeaverAI')
 
 # Initializ varibles, lists and strings to store the generated story later on
 # Initialize variables using st.session_state
+# Initialize to an empty string for accepting the user name.
+if "user_name" not in st.session_state:
+    st.session_state["user_name"] = ""
 # Initialized the story to maintain long context window
 if "story_history" not in st.session_state:
     st.session_state["story_history"] = ""
