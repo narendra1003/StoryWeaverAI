@@ -16,7 +16,7 @@ import chromadb
 GOOGLE_API_KEY = st.secrets["GOOGLE_API_KEY"]
 
 # Set up ChromaDB in-memory (Corrected client initialization)
-client_rag = chromadb.Client(client_type="memory")
+client_rag = chromadb.Client()
 
 # Check if the collection exists before creating it
 if "story_knowledge" not in client_rag.list_collections():  # Simplified check
