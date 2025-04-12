@@ -226,7 +226,7 @@ def main():
                         st.session_state.story_started = False
                         st.rerun()
 
-'''
+
 # Writing examples section
 with st.expander("View Writing Style Examples"):
     st.write("The AI storyteller uses these examples as inspiration:")
@@ -234,7 +234,7 @@ with st.expander("View Writing Style Examples"):
         st.subheader(f"{example['type']}: {example['value']}")
         st.write(example['story'])
         st.markdown("---")
-'''   
+  
 
 # Reset button (only shown if story has been generated)
 if st.session_state.story_history:
