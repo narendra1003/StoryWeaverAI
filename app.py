@@ -32,13 +32,15 @@ few_shot_examples = [
     },
 ]
 
-# Initialize session state variables
+# Initialize all session state variables
 if 'story_history' not in st.session_state:
     st.session_state.story_history = ""
 if 'generated_story_parts' not in st.session_state:
     st.session_state.generated_story_parts = []
 if 'first_turn' not in st.session_state:
     st.session_state.first_turn = True
+if 'intro_message' not in st.session_state:
+    st.session_state.intro_message = ""
 
 # Function to create the story prompt
 def create_interactive_prompt(user_input, story_history=""):
@@ -64,21 +66,26 @@ def main():
         client = genai.Client(api_key=GOOGLE_API_KEY)
         chat = client.chats.create(model="gemini-2.0-flash")
         
+        # Display introduction if it exists
+        if st.session_state.intro_message:
+            st.markdown("---")
+            st.subheader("Your Storytelling Companion Says:")
+            st.markdown(st.session_state.intro_message)
+        
         if st.session_state.first_turn:
-            introduction_prompt = f"""
-            Introduce yourself to {user_name} as they will be using your capabilities 
-            to create an interactive story. Use their name in the explanation.
-            Be friendly and enthusiastic about storytelling!
-            """
-            
             if st.button("Start Storytelling Session"):
+                introduction_prompt = f"""
+                Introduce yourself to {user_name} as they will be using your capabilities 
+                to create an interactive story. Use their name in the explanation.
+                Be friendly and enthusiastic about storytelling!
+                """
+                
                 with st.spinner("Getting the storyteller ready..."):
                     response = chat.send_message(introduction_prompt)
                 
-                st.markdown("---")
-                st.subheader("Your Storytelling Companion Says:")
-                st.markdown(response.text)
+                st.session_state.intro_message = response.text
                 st.session_state.first_turn = False
+                st.experimental_rerun()
                 
         if not st.session_state.first_turn:
             st.markdown("---")
@@ -88,19 +95,22 @@ def main():
             with col1:
                 genre = st.selectbox(
                     "Choose a genre:",
-                    ["Fantasy", "Sci-Fi", "Mystery", "Adventure", "Romance", "Horror"]
+                    ["Fantasy", "Sci-Fi", "Mystery", "Adventure", "Romance", "Horror"],
+                    key="genre_select"
                 )
             with col2:
                 emotion_options = [ex["value"] for ex in few_shot_examples if ex["type"] == "Core Emotion"]
                 tone = st.selectbox(
                     "Choose a core emotion or tone:",
-                    ["Whimsical", "Dark", "Humorous", "Serious", "Suspenseful"] + emotion_options
+                    ["Whimsical", "Dark", "Humorous", "Serious", "Suspenseful"] + emotion_options,
+                    key="tone_select"
                 )
                 
-            character = st.text_input("Who should be the main character?")
-            setting = st.text_input("Where should the story take place?")
+            character = st.text_input("Who should be the main character?", key="character_input")
+            setting = st.text_input("Where should the story take place?", key="setting_input")
             special_element = st.text_input("Add a special element (optional):", 
-                                          placeholder="e.g., a magical object, a secret, etc.")
+                                        placeholder="e.g., a magical object, a secret, etc.",
+                                        key="special_element_input")
             
             if st.button("Generate Story Beginning"):
                 if not character or not setting:
@@ -132,6 +142,10 @@ def main():
                     st.subheader("Your Story Begins...")
                     st.markdown(story_response.text)
                     
+                    # Store current selections to maintain them after generation
+                    st.session_state.current_genre = genre
+                    st.session_state.current_tone = tone
+                    
                     # Dynamic continuation choices
                     if "Dread" in tone or "Dark" in tone or "Horror" in genre:
                         choices = [
@@ -155,7 +169,8 @@ def main():
                     next_action = st.radio(
                         "Choose how to continue:",
                         choices,
-                        index=None
+                        index=None,
+                        key="continuation_choice"
                     )
                     
                     if next_action and st.button("Continue Story"):
@@ -164,7 +179,7 @@ def main():
                             Continue the existing story with this direction:
                             {next_action}
                             
-                            Maintain the {tone.lower()} tone and {genre.lower()} genre.
+                            Maintain the {st.session_state.current_tone.lower()} tone and {st.session_state.current_genre.lower()} genre.
                             Keep consistent with the existing characters and setting.
                             Make it about 2-3 paragraphs.
                             """,
@@ -181,19 +196,13 @@ def main():
                         st.subheader("Story Continues...")
                         st.markdown(continuation_response.text)
 
-# Writing examples section
-with st.expander("View Writing Style Examples"):
-    st.write("The AI storyteller uses these examples as inspiration:")
-    for example in few_shot_examples:
-        st.subheader(f"{example['type']}: {example['value']}")
-        st.write(example['story'])
-        st.markdown("---")
 
 # Reset button
 if st.button("Reset Story"):
     st.session_state.story_history = ""
     st.session_state.generated_story_parts = []
     st.session_state.first_turn = True
+    st.session_state.intro_message = ""
     st.experimental_rerun()
 
 if __name__ == "__main__":
