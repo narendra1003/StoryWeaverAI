@@ -47,6 +47,8 @@ if 'show_story_controls' not in st.session_state:
     st.session_state.show_story_controls = False
 if 'story_started' not in st.session_state:
     st.session_state.story_started = False
+if 'user_name' not in st.session_state:
+    st.session_state.user_name = ""
 
 # Function to create the story prompt with word limit
 def create_interactive_prompt(user_input, story_history=[]):
@@ -75,10 +77,20 @@ GOOGLE_API_KEY = st.secrets["GOOGLE_API_KEY"]
 
 # Main app logic
 def main():
-    # Get user name
-    user_name = st.text_input("Please share your name:", key="user_name").strip()
-
-    if user_name:
+    # Name input with immediate button
+    col1, col2 = st.columns([4, 1])
+    with col1:
+        user_name = st.text_input("Please share your name:", key="name_input", value=st.session_state.user_name).strip()
+    with col2:
+        if st.button("Submit"):
+            if user_name:
+                st.session_state.user_name = user_name
+                st.rerun()
+            else:
+                st.warning("Please enter your name")
+    
+    # Check for stored name instead of immediate input
+    if st.session_state.user_name:
         client = genai.Client(api_key=GOOGLE_API_KEY)
         chat = client.chats.create(model="gemini-2.0-flash")
         
@@ -94,7 +106,7 @@ def main():
             with col1:
                 if st.button("Weave A Story"):
                     introduction_prompt = f"""
-                    Introduce yourself to {user_name} as they will be using your capabilities 
+                    Introduce yourself to {st.session_state.user_name} as they will be using your capabilities 
                     to create an interactive story. Use their name in the explanation.
                     Be friendly and enthusiastic about storytelling!
                     Keep your introduction under 100 words.
@@ -180,10 +192,6 @@ def main():
                 for part in st.session_state.story_history:
                     st.markdown(part)
                     st.markdown("---")
-                
-                # Word count display
-                current_word_count = len(" ".join(st.session_state.story_history).split())
-                # st.caption(f"Total story length: {current_word_count} words")
                 
                 # Continuation options with quit button
                 st.subheader("What happens next?")
