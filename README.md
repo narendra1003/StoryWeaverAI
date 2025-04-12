@@ -27,6 +27,11 @@ An interactive storytelling application powered by Google Gemini that creates en
 4. Choose how to continue the story at each step
 5. Build a complete narrative through interactive choices
 
+## Screenshots 🖼️
+Image 1 ![Image_1](https://github.com/user-attachments/assets/600d4a12-9ddb-4a99-a873-17685576fa8d)
+Image 2 ![Image_2](https://github.com/user-attachments/assets/e9d33259-47c3-4407-afff-48da50679bd9)
+Image 3 ![Image_3](https://github.com/user-attachments/assets/13a60de6-212d-40b9-9f2b-65bba3261e7f)
+
 ## Installation & Setup ⚙️
 
 ### Prerequisites
