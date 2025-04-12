@@ -203,7 +203,7 @@ if st.button("Reset Story"):
     st.session_state.generated_story_parts = []
     st.session_state.first_turn = True
     st.session_state.intro_message = ""
-    st.experimental_rerun()
+    st.rerun()
 
 if __name__ == "__main__":
     main()
