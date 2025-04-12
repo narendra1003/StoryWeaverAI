@@ -41,15 +41,15 @@ if 'first_turn' not in st.session_state:
     st.session_state.first_turn = True
 
 # Function to create the story prompt
-def create_interactive_prompt(user_input, few_shot_examples, story_history=""):
-    prompt = "Here are some examples of short stories based on a core emotion or a brief situation, often with a psychological twist:\n\n"
+def create_interactive_prompt(user_input, story_history=""):
+    prompt = "Here are some examples of excellent short stories:\n\n"
     for example in few_shot_examples:
         prompt += f"{example['type']}: {example['value']}\nStory: {example['story']}\n\n"
 
     if story_history:
         prompt += f"The story so far:\n{story_history}\n\n"
 
-    prompt += f"Now, generate a short story based on the following user input:\n\n{user_input}\nStory:"
+    prompt += f"Now, generate a new story segment based on the following input:\n\n{user_input}\n\nStory:"
     return prompt
 
 # Get API key
@@ -60,12 +60,10 @@ def main():
     # Get user name
     user_name = st.text_input("Please share your name:", key="user_name").strip()
 
-    if user_name:  # Only proceed if user has entered a name
-        # Initialize the chat client
+    if user_name:
         client = genai.Client(api_key=GOOGLE_API_KEY)
         chat = client.chats.create(model="gemini-2.0-flash")
         
-        # Introduction from the AI (only on first turn)
         if st.session_state.first_turn:
             introduction_prompt = f"""
             Introduce yourself to {user_name} as they will be using your capabilities 
@@ -77,18 +75,15 @@ def main():
                 with st.spinner("Getting the storyteller ready..."):
                     response = chat.send_message(introduction_prompt)
                 
-                # Display the introduction
                 st.markdown("---")
                 st.subheader("Your Storytelling Companion Says:")
                 st.markdown(response.text)
                 st.session_state.first_turn = False
                 
-        # Story generation section (after introduction)
         if not st.session_state.first_turn:
             st.markdown("---")
             st.subheader("Let's Create a Story Together!")
             
-            # Story parameters
             col1, col2 = st.columns(2)
             with col1:
                 genre = st.selectbox(
@@ -96,7 +91,6 @@ def main():
                     ["Fantasy", "Sci-Fi", "Mystery", "Adventure", "Romance", "Horror"]
                 )
             with col2:
-                # Create emotion options from few-shot examples
                 emotion_options = [ex["value"] for ex in few_shot_examples if ex["type"] == "Core Emotion"]
                 tone = st.selectbox(
                     "Choose a core emotion or tone:",
@@ -105,74 +99,57 @@ def main():
                 
             character = st.text_input("Who should be the main character?")
             setting = st.text_input("Where should the story take place?")
-            
-            # Additional story elements
             special_element = st.text_input("Add a special element (optional):", 
                                           placeholder="e.g., a magical object, a secret, etc.")
-            
-            use_examples = st.checkbox("Use curated writing examples to guide the style", value=True)
             
             if st.button("Generate Story Beginning"):
                 if not character or not setting:
                     st.warning("Please provide both a character and a setting")
                 else:
-                    # Prepare the user input for prompt
                     user_input = f"""
-                    Genre: {genre}
-                    Tone/Emotion: {tone}
-                    Main Character: {character}
-                    Setting: {setting}
-                    {f"Special Element: {special_element}" if special_element else ""}
+                    Create a story with these parameters:
+                    - Genre: {genre}
+                    - Tone/Emotion: {tone}
+                    - Main Character: {character}
+                    - Setting: {setting}
+                    {f"- Special Element: {special_element}" if special_element else ""}
+                    
+                    Craft 2-3 engaging paragraphs that set up the story.
                     """
                     
-                    # Get the prompt using our new function
                     prompt = create_interactive_prompt(
                         user_input=user_input,
-                        few_shot_examples=few_shot_examples if use_examples else [],
                         story_history=st.session_state.story_history
                     )
                     
                     with st.spinner("Crafting your story..."):
                         story_response = chat.send_message(prompt)
                     
-                    # Update story history
                     st.session_state.generated_story_parts.append(story_response.text)
                     st.session_state.story_history = "\n\n".join(st.session_state.generated_story_parts)
                     
-                    # Display the story
                     st.markdown("---")
-                    st.subheader("Your Story")
+                    st.subheader("Your Story Begins...")
                     st.markdown(story_response.text)
                     
-                    # Display story history in expander
-                    with st.expander("View Full Story So Far"):
-                        st.markdown(st.session_state.story_history)
-                    
-                    # Add options for continuing the story
-                    st.markdown("---")
-                    st.subheader("What happens next?")
-                    
-                    # Dynamic choices based on the selected tone
+                    # Dynamic continuation choices
                     if "Dread" in tone or "Dark" in tone or "Horror" in genre:
                         choices = [
                             "Continue building suspense",
                             "Introduce a terrifying revelation",
-                            "Have the character discover something disturbing",
-                            "Add a supernatural element"
+                            "Have the character discover something disturbing"
                         ]
                     elif "Romance" in genre:
                         choices = [
                             "Develop the romantic tension",
                             "Introduce a complication",
-                            "Add a tender moment",
-                            "Reveal a secret from the past"
+                            "Add a tender moment"
                         ]
-                    else:  # Default choices
+                    else:
                         choices = [
                             "Continue the story naturally", 
                             "Add a surprising twist",
-                            "Introduce a new character",
-                            "Create a dramatic conflict"
+                            "Introduce a new character"
                         ]
                     
                     next_action = st.radio(
@@ -182,49 +159,42 @@ def main():
                     )
                     
                     if next_action and st.button("Continue Story"):
-                        continuation_prompt = f"""
-                        Continue the existing story with the following direction:
-                        {next_action}
-                        
-                        Maintain the {tone.lower()} tone and {genre.lower()} genre.
-                        Keep consistent with the existing characters and setting.
-                        Make it about 2-3 paragraphs.
-                        """
-                        
-                        if use_examples:
-                            continuation_prompt += "\nMaintain the same quality as the examples provided earlier."
+                        continuation_prompt = create_interactive_prompt(
+                            user_input=f"""
+                            Continue the existing story with this direction:
+                            {next_action}
+                            
+                            Maintain the {tone.lower()} tone and {genre.lower()} genre.
+                            Keep consistent with the existing characters and setting.
+                            Make it about 2-3 paragraphs.
+                            """,
+                            story_history=st.session_state.story_history
+                        )
                         
                         with st.spinner("Developing the next chapter..."):
                             continuation_response = chat.send_message(continuation_prompt)
                         
-                        # Update story history
                         st.session_state.generated_story_parts.append(continuation_response.text)
                         st.session_state.story_history = "\n\n".join(st.session_state.generated_story_parts)
                         
-                        # Display the continuation
                         st.markdown("---")
                         st.subheader("Story Continues...")
                         st.markdown(continuation_response.text)
-                        
-                        # Update full story view
-                        with st.expander("View Full Story So Far"):
-                            st.markdown(st.session_state.story_history)
 
-# Add section to show the few-shot examples
-with st.expander("View Writing Examples Used"):
-    st.write("These examples help guide the AI's writing style:")
+# Writing examples section
+with st.expander("View Writing Style Examples"):
+    st.write("The AI storyteller uses these examples as inspiration:")
     for example in few_shot_examples:
         st.subheader(f"{example['type']}: {example['value']}")
         st.write(example['story'])
         st.markdown("---")
 
-# Add reset button
+# Reset button
 if st.button("Reset Story"):
     st.session_state.story_history = ""
     st.session_state.generated_story_parts = []
     st.session_state.first_turn = True
     st.experimental_rerun()
 
-# Run the main app
 if __name__ == "__main__":
     main()
