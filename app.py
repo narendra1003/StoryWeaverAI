@@ -142,7 +142,7 @@ def main():
                                             placeholder="e.g., a magical object, a secret, etc.",
                                             key="special_element_input")
                 
-                if st.button("Generate Story Beginning"):
+                if st.button("Generate Story"):
                     if not character or not setting:
                         st.warning("Please provide both a character and a setting")
                     else:
@@ -165,7 +165,7 @@ def main():
                             story_history=st.session_state.story_history
                         )
                         
-                        with st.spinner("Crafting your story (150 words)..."):
+                        with st.spinner("Crafting your story..."):
                             story_response = chat.send_message(prompt)
                         
                         st.session_state.story_history.append(story_response.text)
@@ -182,8 +182,8 @@ def main():
                     st.markdown("---")
                 
                 # Word count display
-                current_word_count = len(" ".join(st.session_state.story_history).split())
-                st.caption(f"Total story length: {current_word_count} words")
+                # current_word_count = len(" ".join(st.session_state.story_history).split())
+                # st.caption(f"Total story length: {current_word_count} words")
                 
                 # Continuation options with quit button
                 st.subheader("What happens next?")
@@ -218,7 +218,7 @@ def main():
                         key="continuation_choice"
                     )
                     
-                    if next_action and st.button("Continue Story (150 words)"):
+                    if next_action and st.button("Continue Story"):
                         continuation_prompt = create_interactive_prompt(
                             user_input=f"""
                             Continue the existing story with this direction:
@@ -234,7 +234,7 @@ def main():
                             story_history=st.session_state.story_history
                         )
                         
-                        with st.spinner("Developing the next chapter (150 words)..."):
+                        with st.spinner("Developing the next chapter ..."):
                             continuation_response = chat.send_message(continuation_prompt)
                         
                         st.session_state.story_history.append(continuation_response.text)
@@ -248,7 +248,7 @@ def main():
                         key="custom_situation"
                     )
                     
-                    if custom_situation and st.button("Continue with My Idea (150 words)"):
+                    if custom_situation and st.button("Continue with My Idea"):
                         continuation_prompt = create_interactive_prompt(
                             user_input=f"""
                             Continue the story with this custom situation:
@@ -264,7 +264,7 @@ def main():
                             story_history=st.session_state.story_history
                         )
                         
-                        with st.spinner("Developing your custom continuation (150 words)..."):
+                        with st.spinner("Developing your custom continuation ..."):
                             continuation_response = chat.send_message(continuation_prompt)
                         
                         st.session_state.story_history.append(continuation_response.text)
