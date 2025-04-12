@@ -182,7 +182,7 @@ def main():
                     st.markdown("---")
                 
                 # Word count display
-                # current_word_count = len(" ".join(st.session_state.story_history).split())
+                current_word_count = len(" ".join(st.session_state.story_history).split())
                 # st.caption(f"Total story length: {current_word_count} words")
                 
                 # Continuation options with quit button
