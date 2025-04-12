@@ -189,34 +189,35 @@ def main():
                 st.subheader("What happens next?")
                 
                 # Dynamic continuation choices
-                if "Dread" in st.session_state.current_tone or "Dark" in st.session_state.current_tone or "Horror" in st.session_state.current_genre:
-                    choices = [
-                        "Continue building suspense",
-                        "Introduce a terrifying revelation",
-                        "Have the character discover something disturbing"
-                    ]
-                elif "Romance" in st.session_state.current_genre:
-                    choices = [
-                        "Develop the romantic tension",
-                        "Introduce a complication",
-                        "Add a tender moment"
-                    ]
-                else:
-                    choices = [
-                        "Continue the story naturally", 
-                        "Add a surprising twist",
-                        "Introduce a new character"
-                    ]
+                tab1, tab2 = st.tabs(["Choose from Options", "Provide Your Own"])
                 
-                next_action = st.radio(
-                    "Choose how to continue:",
-                    choices,
-                    index=None,
-                    key="continuation_choice"
-                )
-                
-                col1, col2 = st.columns([3, 1])
-                with col1:
+                with tab1:
+                    if "Dread" in st.session_state.current_tone or "Dark" in st.session_state.current_tone or "Horror" in st.session_state.current_genre:
+                        choices = [
+                            "Continue building suspense",
+                            "Introduce a terrifying revelation",
+                            "Have the character discover something disturbing"
+                        ]
+                    elif "Romance" in st.session_state.current_genre:
+                        choices = [
+                            "Develop the romantic tension",
+                            "Introduce a complication",
+                            "Add a tender moment"
+                        ]
+                    else:
+                        choices = [
+                            "Continue the story naturally", 
+                            "Add a surprising twist",
+                            "Introduce a new character"
+                        ]
+                    
+                    next_action = st.radio(
+                        "Choose how to continue:",
+                        choices,
+                        index=None,
+                        key="continuation_choice"
+                    )
+                    
                     if next_action and st.button("Continue Story (150 words)"):
                         continuation_prompt = create_interactive_prompt(
                             user_input=f"""
@@ -238,14 +239,45 @@ def main():
                         
                         st.session_state.story_history.append(continuation_response.text)
                         st.rerun()
-                with col2:
-                    if st.button("Quit Session"):
-                        st.session_state.story_history = []
-                        st.session_state.first_turn = True
-                        st.session_state.intro_message = ""
-                        st.session_state.show_story_controls = False
-                        st.session_state.story_started = False
+                
+                with tab2:
+                    custom_situation = st.text_area(
+                        "Describe what should happen next:",
+                        placeholder="e.g., 'The character finds a mysterious letter under the door...'",
+                        height=100,
+                        key="custom_situation"
+                    )
+                    
+                    if custom_situation and st.button("Continue with My Idea (150 words)"):
+                        continuation_prompt = create_interactive_prompt(
+                            user_input=f"""
+                            Continue the story with this custom situation:
+                            {custom_situation}
+                            
+                            Requirements:
+                            - Exactly 150 words
+                            - Maintain {st.session_state.current_tone.lower()} tone
+                            - Keep {st.session_state.current_genre.lower()} genre
+                            - Consistent with existing characters/setting
+                            - Natural stopping point
+                            """,
+                            story_history=st.session_state.story_history
+                        )
+                        
+                        with st.spinner("Developing your custom continuation (150 words)..."):
+                            continuation_response = chat.send_message(continuation_prompt)
+                        
+                        st.session_state.story_history.append(continuation_response.text)
                         st.rerun()
+                
+                # Quit button
+                if st.button("Quit Session"):
+                    st.session_state.story_history = []
+                    st.session_state.first_turn = True
+                    st.session_state.intro_message = ""
+                    st.session_state.show_story_controls = False
+                    st.session_state.story_started = False
+                    st.rerun()
 
 # Writing examples section
 with st.expander("View Writing Style Examples"):
