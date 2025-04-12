@@ -80,21 +80,29 @@ def main():
         
         # Start session button (only shown first time)
         if st.session_state.first_turn and not st.session_state.story_started:
-            if st.button("Start Storytelling Session"):
-                introduction_prompt = f"""
-                Introduce yourself to {user_name} as they will be using your capabilities 
-                to create an interactive story. Use their name in the explanation.
-                Be friendly and enthusiastic about storytelling!
-                """
-                
-                with st.spinner("Getting the storyteller ready..."):
-                    response = chat.send_message(introduction_prompt)
-                
-                st.session_state.intro_message = response.text
-                st.session_state.first_turn = False
-                st.session_state.story_started = True
-                st.session_state.show_story_controls = True
-                st.rerun()
+            col1, col2 = st.columns([3, 1])
+            with col1:
+                if st.button("Start Storytelling Session"):
+                    introduction_prompt = f"""
+                    Introduce yourself to {user_name} as they will be using your capabilities 
+                    to create an interactive story. Use their name in the explanation.
+                    Be friendly and enthusiastic about storytelling!
+                    """
+                    
+                    with st.spinner("Getting the storyteller ready..."):
+                        response = chat.send_message(introduction_prompt)
+                    
+                    st.session_state.intro_message = response.text
+                    st.session_state.first_turn = False
+                    st.session_state.story_started = True
+                    st.session_state.show_story_controls = True
+                    st.rerun()
+            with col2:
+                if st.button("Quit Session"):
+                    st.session_state.story_started = False
+                    st.session_state.first_turn = True
+                    st.session_state.intro_message = ""
+                    st.rerun()
         
         # Story creation controls
         if st.session_state.show_story_controls:
@@ -151,16 +159,15 @@ def main():
                         st.session_state.current_tone = tone
                         st.rerun()
             
-            # Display full story history
+            # Display full story history without part numbers
             if st.session_state.story_history:
                 st.markdown("---")
                 st.subheader("Your Story")
-                for i, part in enumerate(st.session_state.story_history, 1):
-                    st.markdown(f"**Part {i}**")
+                for part in st.session_state.story_history:
                     st.markdown(part)
                     st.markdown("---")
                 
-                # Continuation options
+                # Continuation options with quit button
                 st.subheader("What happens next?")
                 
                 # Dynamic continuation choices
@@ -190,25 +197,36 @@ def main():
                     key="continuation_choice"
                 )
                 
-                if next_action and st.button("Continue Story"):
-                    continuation_prompt = create_interactive_prompt(
-                        user_input=f"""
-                        Continue the existing story with this direction:
-                        {next_action}
+                col1, col2 = st.columns([3, 1])
+                with col1:
+                    if next_action and st.button("Continue Story"):
+                        continuation_prompt = create_interactive_prompt(
+                            user_input=f"""
+                            Continue the existing story with this direction:
+                            {next_action}
+                            
+                            Maintain the {st.session_state.current_tone.lower()} tone and {st.session_state.current_genre.lower()} genre.
+                            Keep consistent with the existing characters and setting.
+                            Make it about 2-3 paragraphs.
+                            """,
+                            story_history=st.session_state.story_history
+                        )
                         
-                        Maintain the {st.session_state.current_tone.lower()} tone and {st.session_state.current_genre.lower()} genre.
-                        Keep consistent with the existing characters and setting.
-                        Make it about 2-3 paragraphs.
-                        """,
-                        story_history=st.session_state.story_history
-                    )
-                    
-                    with st.spinner("Developing the next chapter..."):
-                        continuation_response = chat.send_message(continuation_prompt)
-                    
-                    st.session_state.story_history.append(continuation_response.text)
-                    st.rerun()
+                        with st.spinner("Developing the next chapter..."):
+                            continuation_response = chat.send_message(continuation_prompt)
+                        
+                        st.session_state.story_history.append(continuation_response.text)
+                        st.rerun()
+                with col2:
+                    if st.button("Quit Session"):
+                        st.session_state.story_history = []
+                        st.session_state.first_turn = True
+                        st.session_state.intro_message = ""
+                        st.session_state.show_story_controls = False
+                        st.session_state.story_started = False
+                        st.rerun()
 
+'''
 # Writing examples section
 with st.expander("View Writing Style Examples"):
     st.write("The AI storyteller uses these examples as inspiration:")
@@ -216,17 +234,19 @@ with st.expander("View Writing Style Examples"):
         st.subheader(f"{example['type']}: {example['value']}")
         st.write(example['story'])
         st.markdown("---")
+'''   
 
-# Reset button
-if st.button("Reset Story"):
-    st.session_state.story_history = []
-    st.session_state.first_turn = True
-    st.session_state.intro_message = ""
-    st.session_state.current_genre = ""
-    st.session_state.current_tone = ""
-    st.session_state.show_story_controls = False
-    st.session_state.story_started = False
-    st.rerun()
+# Reset button (only shown if story has been generated)
+if st.session_state.story_history:
+    if st.button("Reset Story"):
+        st.session_state.story_history = []
+        st.session_state.first_turn = True
+        st.session_state.intro_message = ""
+        st.session_state.current_genre = ""
+        st.session_state.current_tone = ""
+        st.session_state.show_story_controls = False
+        st.session_state.story_started = False
+        st.rerun()
 
 if __name__ == "__main__":
     main()
