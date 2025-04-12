@@ -48,7 +48,7 @@ if 'show_story_controls' not in st.session_state:
 if 'story_started' not in st.session_state:
     st.session_state.story_started = False
 
-# Function to create the story prompt
+# Function to create the story prompt with word limit
 def create_interactive_prompt(user_input, story_history=[]):
     prompt = "Here are some examples of excellent short stories:\n\n"
     for example in few_shot_examples:
@@ -57,7 +57,17 @@ def create_interactive_prompt(user_input, story_history=[]):
     if story_history:
         prompt += f"The story so far:\n{' '.join(story_history)}\n\n"
 
-    prompt += f"Now, generate a new story segment based on the following input:\n\n{user_input}\n\nStory:"
+    prompt += f"""Now, generate a new story segment based on the following input:
+    
+    {user_input}
+    
+    Important instructions:
+    - Limit the story segment to exactly 150 words
+    - Count the words and ensure strict adherence
+    - Maintain the story's flow and quality
+    - End with a natural stopping point
+    
+    Story:"""
     return prompt
 
 # Get API key
@@ -87,6 +97,7 @@ def main():
                     Introduce yourself to {user_name} as they will be using your capabilities 
                     to create an interactive story. Use their name in the explanation.
                     Be friendly and enthusiastic about storytelling!
+                    Keep your introduction under 100 words.
                     """
                     
                     with st.spinner("Getting the storyteller ready..."):
@@ -136,14 +147,17 @@ def main():
                         st.warning("Please provide both a character and a setting")
                     else:
                         user_input = f"""
-                        Create a story with these parameters:
+                        Create a story beginning with these parameters:
                         - Genre: {genre}
                         - Tone/Emotion: {tone}
                         - Main Character: {character}
                         - Setting: {setting}
                         {f"- Special Element: {special_element}" if special_element else ""}
                         
-                        Craft 2-3 engaging paragraphs that set up the story.
+                        Important:
+                        - Exactly 150 words
+                        - Engaging opening
+                        - Sets up for future developments
                         """
                         
                         prompt = create_interactive_prompt(
@@ -151,7 +165,7 @@ def main():
                             story_history=st.session_state.story_history
                         )
                         
-                        with st.spinner("Crafting your story..."):
+                        with st.spinner("Crafting your story (150 words)..."):
                             story_response = chat.send_message(prompt)
                         
                         st.session_state.story_history.append(story_response.text)
@@ -166,6 +180,10 @@ def main():
                 for part in st.session_state.story_history:
                     st.markdown(part)
                     st.markdown("---")
+                
+                # Word count display
+                current_word_count = len(" ".join(st.session_state.story_history).split())
+                st.caption(f"Total story length: {current_word_count} words")
                 
                 # Continuation options with quit button
                 st.subheader("What happens next?")
@@ -199,20 +217,23 @@ def main():
                 
                 col1, col2 = st.columns([3, 1])
                 with col1:
-                    if next_action and st.button("Continue Story"):
+                    if next_action and st.button("Continue Story (150 words)"):
                         continuation_prompt = create_interactive_prompt(
                             user_input=f"""
                             Continue the existing story with this direction:
                             {next_action}
                             
-                            Maintain the {st.session_state.current_tone.lower()} tone and {st.session_state.current_genre.lower()} genre.
-                            Keep consistent with the existing characters and setting.
-                            Make it about 2-3 paragraphs.
+                            Requirements:
+                            - Exactly 150 words
+                            - Maintain {st.session_state.current_tone.lower()} tone
+                            - Keep {st.session_state.current_genre.lower()} genre
+                            - Consistent with existing characters/setting
+                            - Natural stopping point
                             """,
                             story_history=st.session_state.story_history
                         )
                         
-                        with st.spinner("Developing the next chapter..."):
+                        with st.spinner("Developing the next chapter (150 words)..."):
                             continuation_response = chat.send_message(continuation_prompt)
                         
                         st.session_state.story_history.append(continuation_response.text)
@@ -226,7 +247,6 @@ def main():
                         st.session_state.story_started = False
                         st.rerun()
 
-
 # Writing examples section
 with st.expander("View Writing Style Examples"):
     st.write("The AI storyteller uses these examples as inspiration:")
@@ -234,7 +254,6 @@ with st.expander("View Writing Style Examples"):
         st.subheader(f"{example['type']}: {example['value']}")
         st.write(example['story'])
         st.markdown("---")
-  
 
 # Reset button (only shown if story has been generated)
 if st.session_state.story_history:
